@@ -1,9 +1,8 @@
-# v2 contract (shared by backend, frontend, rules/samples)
+# API contract (shared by backend, frontend, rules/samples)
 
-v2 lives in `/Users/kravchuk-ivan/sd/cerebras/v2`, runs on **http://localhost:4000**, Node 24, **no npm dependencies, no build step**, ES modules.
-v1 (`/Users/kravchuk-ivan/sd/cerebras/*.js`, `public/`, port 3000) is running for a live demo — **never modify v1 files or kill the process on port 3000.**
+Runs on **http://localhost:4000**, Node 24, **no npm dependencies, no build step**, ES modules.
 
-Model: `gpt-oss-120b` on Cerebras (`https://api.cerebras.ai/v1`, OpenAI-compatible, key in `v2/.env` as `CEREBRAS_API_KEY`).
+Model: `gpt-oss-120b` on Cerebras (`https://api.cerebras.ai/v1`, OpenAI-compatible, key in `.env` as `CEREBRAS_API_KEY`).
 The account has a low **tokens-per-minute quota** (HTTP 429 `token_quota_exceeded`). Keep live model calls rare during development, keep test scripts small, wait ~60 s after a 429.
 
 ## File ownership

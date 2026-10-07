@@ -1,33 +1,185 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'" />
   <title>Script Verdict</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
-    <h1>Script Verdict</h1>
-    <span class="sub">Paste a script from the Network tab. Analysis starts on paste.</span>
-    <span id="status" class="status"></span>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 2 4 5v6c0 5 3.4 8.5 8 11 4.6-2.5 8-6 8-11V5l-8-3Z" class="brand-shield"/><path d="M9 12.2l2.1 2.1L15.4 10" class="brand-check"/></svg>
+      </span>
+      <div class="brand-text">
+        <span class="brand-title">Script Verdict</span>
+        <span class="brand-sub">client-side threat analysis · gpt-oss-120b on Cerebras</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span id="devmockBadge" class="hidden pill pill-dev">DEV MOCK</span>
+      <button id="newScanBtn" class="btn btn-ghost">New scan</button>
+    </div>
   </header>
-  <main>
-    <section class="input">
-      <input id="source" type="url" placeholder="Script URL (optional, improves attribution)" autocomplete="off" spellcheck="false">
-      <textarea id="script" placeholder="Paste JavaScript here…" spellcheck="false"></textarea>
-      <div class="actions">
-        <label><input id="autorun" type="checkbox" checked> Analyze on paste</label>
-        <span class="hint">⌘/Ctrl + Enter</span>
-        <button id="clear" type="button" class="secondary">Clear</button>
-        <button id="analyze" type="button">Analyze</button>
+
+  <!-- ================= LANDING ================= -->
+  <main id="landing" class="landing">
+    <section class="hero">
+      <h1 class="hero-title">Paste a script. See the threat in <span class="hero-accent">~2 seconds.</span></h1>
+      <p class="hero-lede">Drop a JavaScript file from your browser's Network tab and get an instant client-side security verdict — Magecart skimmers, PII exfiltration, code-execution sinks, and PCI DSS 6.4.3 / 11.6.1 exposure.</p>
+
+      <div id="dropzone" class="dropzone">
+        <textarea id="pasteInput" class="paste-input" spellcheck="false" autocomplete="off" placeholder="// Paste JavaScript here — analysis starts automatically.&#10;// …or drop a .js file anywhere on this panel."></textarea>
+        <div class="dropzone-hint">Drop <b>.js</b> file · or paste · ⌘/Ctrl+Enter to re-run</div>
+        <button id="analyzeBtn" class="btn btn-primary btn-analyze">Analyze</button>
+      </div>
+
+      <div class="landing-row">
+        <div class="url-fetch">
+          <label class="field-label" for="urlInput">Fetch from URL</label>
+          <div class="url-fetch-row">
+            <input id="urlInput" class="url-input" type="url" spellcheck="false" placeholder="https://cdn.example.com/widget.js" />
+            <button id="fetchBtn" class="btn btn-ghost">Fetch</button>
+          </div>
+          <div id="fetchStatus" class="fetch-status"></div>
+        </div>
+      </div>
+
+      <div class="samples">
+        <div class="samples-label">Try a sample</div>
+        <div id="samplesMount" class="samples-grid">
+          <div class="sample skeleton-sample"></div>
+          <div class="sample skeleton-sample"></div>
+        </div>
       </div>
     </section>
-    <section class="output">
-      <div id="static" class="static hidden"></div>
-      <article id="report" class="report"><p class="empty">Results appear here.</p></article>
+  </main>
+
+  <!-- ================= RESULTS ================= -->
+  <main id="results" class="results hidden">
+    <!-- Speed strip -->
+    <section class="speed-wrap">
+      <div id="speedStrip" class="speed-strip"></div>
+    </section>
+
+    <div id="errorBanner" class="error-banner hidden"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab-list">
+        <button class="tab-btn active" data-tab="analysis">Analysis</button>
+        <button class="tab-btn" data-tab="source">Source <span id="sourceMeta" class="tab-sub"></span></button>
+      </div>
+      <div class="tab-actions">
+        <button id="rerunBtn" class="btn btn-ghost btn-mini">Re-run</button>
+        <button id="replayBtn" class="btn btn-ghost btn-mini">Replay</button>
+        <span class="tab-sep"></span>
+        <button id="btnCopyMd" class="btn btn-ghost btn-mini">Copy MD</button>
+        <button id="btnDownloadJson" class="btn btn-ghost btn-mini">JSON</button>
+        <button id="btnPrint" class="btn btn-ghost btn-mini">Print</button>
+      </div>
+    </div>
+
+    <!-- Analysis panel -->
+    <section class="tab-panel active" data-tab="analysis">
+      <!-- Risk hero -->
+      <div class="grid-hero">
+        <div class="card card-hero">
+          <div id="riskSkeleton" class="risk-skeleton">
+            <div class="sk-gauge"></div>
+            <div class="sk-lines"><div class="sk-line w40"></div><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-line w90"></div></div>
+          </div>
+          <div id="riskContent" class="risk-content hidden">
+            <div class="risk-gauge">
+              <div id="gaugeMount" class="gauge-mount"></div>
+              <div id="riskLevel" class="risk-level">SCANNING…</div>
+            </div>
+            <div class="risk-detail">
+              <p id="riskVerdict" class="risk-verdict"></p>
+              <div id="riskMeta" class="risk-metarow"></div>
+              <p id="riskSummary" class="risk-summary"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-sev">
+          <h2 class="card-title">Severity</h2>
+          <div id="sevCounts" class="sev-counts"></div>
+        </div>
+      </div>
+
+      <!-- Findings + side rail -->
+      <div class="grid-main">
+        <div class="col-main">
+          <div class="card">
+            <h2 class="card-title">Findings <span id="findingsCount" class="count-badge">0</span></h2>
+            <div id="findingsMount" class="findings-list"></div>
+            <div id="findingsSkeleton" class="findings-skeleton">
+              <div class="sk-card"></div><div class="sk-card"></div><div class="sk-card"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="card-title">Data flow</h2>
+            <div id="flowMount" class="flow-mount"></div>
+          </div>
+
+          <div id="prescanCard" class="card hidden">
+            <h2 class="card-title">Instant pre-scan <span class="card-sub">regex hits before the model</span></h2>
+            <div id="prescanMount" class="prescan-mount"></div>
+          </div>
+        </div>
+
+        <aside class="col-rail">
+          <div id="complianceCard" class="card hidden">
+            <h2 class="card-title">Compliance</h2>
+            <div id="complianceMount"></div>
+          </div>
+
+          <div id="recsCard" class="card hidden">
+            <h2 class="card-title">Recommendations</h2>
+            <ol id="recsMount" class="recs-list"></ol>
+          </div>
+
+          <div id="behaviorsCard" class="card hidden">
+            <h2 class="card-title">Observed behavior</h2>
+            <ul id="behaviorsMount" class="behavior-list"></ul>
+          </div>
+
+          <div id="cspCard" class="card hidden">
+            <div id="cspMount"></div>
+          </div>
+
+          <div id="iocCard" class="card hidden">
+            <h2 class="card-title">Indicators (IOCs)</h2>
+            <table class="ioc-table">
+              <thead><tr><th>Kind</th><th>Value</th><th>Note</th><th></th></tr></thead>
+              <tbody id="iocBody"></tbody>
+            </table>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Source panel -->
+    <section class="tab-panel" data-tab="source">
+      <div class="card card-source">
+        <div class="source-toolbar">
+          <h2 class="card-title">Source</h2>
+          <div class="source-tools">
+            <button id="btnPretty" class="btn btn-ghost btn-mini">Pretty: off</button>
+            <button id="btnWrap" class="btn btn-ghost btn-mini">Wrap: off</button>
+          </div>
+        </div>
+        <div id="sourceMount" class="source-view"></div>
+      </div>
     </section>
   </main>
-  <script src="/app.js"></script>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>

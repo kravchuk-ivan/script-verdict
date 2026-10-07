@@ -1,18 +1,20 @@
 # Script Verdict
 
-Paste a JavaScript file copied from the browser Network tab and get a security analysis from `gpt-oss-120b` on Cerebras.
+Instant AI security verdicts for third-party JavaScript, powered by `gpt-oss-120b` on Cerebras.
 
-1. **Instant pre-scan** (local, ~1 ms): regex rules for skimming/keylogging, sensitive-field access, exfiltration channels, DOM XSS sinks, eval/obfuscation, fingerprinting, hardcoded secrets, plus domain extraction (including base64-hidden URLs).
-2. **LLM analysis** (streamed, ~1-3 s): verdict and risk rating, behavior, data-flow table, evidence-backed findings, PCI DSS 6.4.3 / 11.6.1 and privacy impact, CSP/SRI recommendations, indicators.
+Paste a script copied from the browser Network tab (or fetch it by URL) and get a full security analysis in about 2 seconds:
+
+1. **Local pre-scan** (regex, ~10-25 ms): skimming/keylogging, sensitive-field access, exfiltration channels, DOM XSS sinks, eval/obfuscation, fingerprinting, hardcoded secrets, plus domain extraction (including base64-hidden URLs).
+2. **LLM analysis** (streamed as structured events, rendered as a live dashboard): risk gauge and score, verdict, behaviors, data-flow diagram, evidence-backed findings with CWE and confidence, PCI DSS 6.4.3 / 11.6.1 and privacy assessment, recommended CSP, indicators of compromise, and first-token / tokens-per-second timing.
 
 ## Run
 
 ```sh
 cp .env.example .env   # set CEREBRAS_API_KEY
-npm start              # http://localhost:3000
+npm start              # http://localhost:4000
 ```
 
-Requires Node 21.7+. No dependencies.
+Requires Node 21.7+. No dependencies, no build step.
 
 ## Config (.env)
 
@@ -22,17 +24,23 @@ Requires Node 21.7+. No dependencies.
 | `CEREBRAS_BASE_URL` | `https://api.cerebras.ai/v1` | any OpenAI-compatible endpoint |
 | `MODEL` | `gpt-oss-120b` | |
 | `REASONING_EFFORT` | `low` | `low` / `medium` / `high` — higher is slower but more thorough |
+| `TEMPERATURE` | `0.1` | |
 | `MAX_SCRIPT_CHARS` | `40000` | larger scripts are sent as head + tail; the pre-scan always covers the full file |
-| `PORT` | `3000` | |
+| `PORT` | `4000` | |
 
 ## Files
 
-- `server.js` — HTTP server, prompt, streaming proxy to the model (`POST /api/analyze`, NDJSON response)
-- `static-scan.js` — pre-scan rules
-- `public/` — UI
+- `server.js` — HTTP server and API (`/api/analyze`, `/api/samples`, `/api/fetch`, `/api/health`)
+- `lib/` — model client, prompt, static pre-scan rules, result cache, SSRF guard for URL fetch
+- `public/` — dashboard UI
+- `samples/` — demo scripts (Magecart skimmer, chat widget, analytics, obfuscated loader, benign widget)
+- `fixtures/` — recorded model output for each sample, replayed on rate limit or with `&mock=<id>`
+- `CONTRACT.md` — API and event-stream format
+- `DEMO.md` — demo walkthrough
 
 ## Notes
 
 - Binds to `127.0.0.1` only. The API key stays server-side.
-- Model output is rendered through an escape-first Markdown renderer under a strict CSP, so script content echoed back by the model cannot execute in the page.
+- URL fetch is server-side and SSRF-guarded (private/loopback/link-local IPs blocked after DNS resolution, 5 s timeout, 5 MB max).
+- Model output is rendered under a strict CSP, so script content echoed back by the model cannot execute in the page.
 - The prompt tells the model to treat the script as untrusted data (prompt-injection resistance), but LLM output should still be reviewed before acting on it.

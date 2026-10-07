@@ -1,6 +1,6 @@
-# Demo guide — Script Verdict v2
+# Demo guide — Script Verdict
 
-Open: http://localhost:4000   (v1 is still at http://localhost:3000, untouched)
+Open: http://localhost:4000
 
 ## Fastest demo
 1. On the landing page, click a sample card (e.g. **Magecart card skimmer**).
