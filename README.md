@@ -16,6 +16,14 @@ npm start              # http://localhost:4000
 
 Requires Node 21.7+. No dependencies, no build step.
 
+## Deploy to Vercel
+
+Import the repo with the **Other** framework preset. `vercel.json` serves `public/` as static files and routes `/api/*` to `api/index.js`, which re-exports the handler from `server.js`.
+
+Set `CEREBRAS_API_KEY` in Project Settings → Environment Variables, then redeploy. Without it, the pre-scan and fixture replays still work, and live analysis returns an error.
+
+The deployed app is public and uses your Cerebras key. Enable Vercel Deployment Protection if it should not be open to everyone.
+
 ## Config (.env)
 
 | Var | Default | |
@@ -30,7 +38,8 @@ Requires Node 21.7+. No dependencies, no build step.
 
 ## Files
 
-- `server.js` — HTTP server and API (`/api/analyze`, `/api/samples`, `/api/fetch`, `/api/health`)
+- `server.js` — request handler and local HTTP server; API (`/api/analyze`, `/api/samples`, `/api/fetch`, `/api/health`)
+- `api/index.js`, `vercel.json` — Vercel entrypoint and config
 - `lib/` — model client, prompt, static pre-scan rules, result cache, SSRF guard for URL fetch
 - `public/` — dashboard UI
 - `samples/` — demo scripts (Magecart skimmer, chat widget, analytics, obfuscated loader, benign widget)

@@ -1,6 +1,7 @@
 import http from 'node:http';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -29,14 +30,12 @@ const OVERALL_DEADLINE_MS = 90_000;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const SAMPLES_DIR = path.join(ROOT, 'samples');
 const FIXTURES_DIR = path.join(ROOT, 'fixtures');
-const CACHE_DIR = path.join(ROOT, '.cache');
+// Vercel's filesystem is read-only except /tmp.
+const CACHE_DIR = process.env.VERCEL ? path.join(os.tmpdir(), 'script-verdict-cache') : path.join(ROOT, '.cache');
 
 const cache = new ResultCache(CACHE_DIR);
 
-if (!CONFIG.apiKey) {
-  console.error('CEREBRAS_API_KEY is not set. Put it in .env or the environment.');
-  process.exit(1);
-}
+const MISSING_KEY_MSG = 'CEREBRAS_API_KEY is not set. Put it in .env or the environment.';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -219,6 +218,11 @@ async function handleAnalyze(req, res) {
   // --- static event, immediately, before the model call ---
   const { event: staticEvt, result } = staticEvent(script);
   send(staticEvt);
+
+  if (!CONFIG.apiKey) {
+    send({ type: 'error', message: MISSING_KEY_MSG, code: 'config' });
+    return res.end();
+  }
 
   const controller = new AbortController();
   res.on('close', () => controller.abort());
@@ -449,7 +453,8 @@ function serveStatic(req, res, pathname) {
 }
 
 // ---------- router ----------
-const server = http.createServer(async (req, res) => {
+// Exported for Vercel (api/index.js); `node server.js` wraps it in an HTTP server below.
+export default async function handler(req, res) {
   let url;
   try { url = new URL(req.url, 'http://localhost'); } catch { res.writeHead(400); return res.end('Bad request'); }
   const { pathname } = url;
@@ -474,10 +479,16 @@ const server = http.createServer(async (req, res) => {
     if (!res.headersSent) sendJson(res, 500, { error: 'Internal error' });
     else if (!res.writableEnded) res.end();
   }
-});
+}
 
 loadSampleHashes().then((m) => { SAMPLE_HASHES = m; console.log(`[samples] indexed ${m.size} sample hashes for 429 fallback`); });
 
-server.listen(PORT, '127.0.0.1', () => {
-  console.log(`Script Verdict: http://127.0.0.1:${PORT}  (model: ${CONFIG.model}, prompt: ${PROMPT_VERSION})`);
-});
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (!CONFIG.apiKey) {
+    console.error(MISSING_KEY_MSG);
+    process.exit(1);
+  }
+  http.createServer(handler).listen(PORT, '127.0.0.1', () => {
+    console.log(`Script Verdict: http://127.0.0.1:${PORT}  (model: ${CONFIG.model}, prompt: ${PROMPT_VERSION})`);
+  });
+}
