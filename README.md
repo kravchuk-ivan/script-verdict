@@ -2,6 +2,8 @@
 
 Instant AI security verdicts for third-party JavaScript, powered by `gpt-oss-120b` on Cerebras.
 
+**Live:** https://script-verdict.vercel.app/ — click a sample card or paste a script.
+
 Paste a script copied from the browser Network tab (or fetch it by URL) and get a full security analysis in about 2 seconds:
 
 1. **Local pre-scan** (regex, ~10-25 ms): skimming/keylogging, sensitive-field access, exfiltration channels, DOM XSS sinks, eval/obfuscation, fingerprinting, hardcoded secrets, plus domain extraction (including base64-hidden URLs).
@@ -18,9 +20,11 @@ Requires Node 21.7+. No dependencies, no build step.
 
 ## Deploy to Vercel
 
-Import the repo with the **Other** framework preset. `vercel.json` serves `public/` as static files and routes `/api/*` to `api/index.js`, which re-exports the handler from `server.js`.
+Live at https://script-verdict.vercel.app/, deployed from `main` on every push.
 
-Set `CEREBRAS_API_KEY` in Project Settings → Environment Variables, then redeploy. Without it, the pre-scan and fixture replays still work, and live analysis returns an error.
+Import the repo into Vercel; no build settings are needed. `vercel.json` sets `"framework": null` (overriding whatever preset the import picked), serves `public/` as static files, and routes `/api/*` to `api/index.js`, which re-exports the handler from `server.js`. `samples/` and `fixtures/` are bundled into the function.
+
+Set `CEREBRAS_API_KEY` in Project Settings → Environment Variables, then redeploy. Without it, the pre-scan and fixture replays still work, and live analysis returns an error. Check `/api/health` after deploying.
 
 The deployed app is public and uses your Cerebras key. Enable Vercel Deployment Protection if it should not be open to everyone.
 

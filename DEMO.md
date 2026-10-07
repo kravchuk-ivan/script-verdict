@@ -1,6 +1,6 @@
 # Demo guide — Script Verdict
 
-Open: http://localhost:4000
+Open: https://script-verdict.vercel.app/ (or http://localhost:4000 locally)
 
 ## Fastest demo
 1. On the landing page, click a sample card (e.g. **Magecart card skimmer**).
@@ -18,7 +18,7 @@ Paste any script from the Network tab into the box — analysis starts on paste.
   per-minute token limit (429), the server automatically replays the recorded
   result for that exact script — the demo still looks live.
 - To force a no-API replay explicitly, add `&mock=<id>` to the URL, e.g.
-  http://localhost:4000/?sample=magecart-skimmer&mock=magecart-skimmer
+  https://script-verdict.vercel.app/?sample=magecart-skimmer&mock=magecart-skimmer
   Sample ids: magecart-skimmer, supportbubble-chat, sketchy-analytics,
   benign-widget, obfuscated-loader.
 - `?devmock=1` runs a fully in-browser demo with no backend at all.
