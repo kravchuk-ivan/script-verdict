@@ -24,7 +24,7 @@ Live at https://script-verdict.vercel.app/, deployed from `main` on every push.
 
 Import the repo into Vercel; no build settings are needed. `vercel.json` sets `"framework": null` (overriding whatever preset the import picked), serves `public/` as static files, and routes `/api/*` to `api/index.js`, which re-exports the handler from `server.js`. `samples/` and `fixtures/` are bundled into the function.
 
-Set `CEREBRAS_API_KEY` in Project Settings → Environment Variables, then redeploy. Without it, the pre-scan and fixture replays still work, and live analysis returns an error. Check `/api/health` after deploying.
+Set `CEREBRAS_API_KEY` in Project Settings → Environment Variables, then redeploy. Without it, the pre-scan and fixture replays still work, and live analysis returns an error. `/api/health` confirms the function is running; it does not check the key.
 
 The deployed app is public and uses your Cerebras key. Enable Vercel Deployment Protection if it should not be open to everyone.
 
