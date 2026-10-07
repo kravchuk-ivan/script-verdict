@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Script Verdict</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <h1>Script Verdict</h1>
+    <span class="sub">Paste a script from the Network tab. Analysis starts on paste.</span>
+    <span id="status" class="status"></span>
+  </header>
+  <main>
+    <section class="input">
+      <input id="source" type="url" placeholder="Script URL (optional, improves attribution)" autocomplete="off" spellcheck="false">
+      <textarea id="script" placeholder="Paste JavaScript here…" spellcheck="false"></textarea>
+      <div class="actions">
+        <label><input id="autorun" type="checkbox" checked> Analyze on paste</label>
+        <span class="hint">⌘/Ctrl + Enter</span>
+        <button id="clear" type="button" class="secondary">Clear</button>
+        <button id="analyze" type="button">Analyze</button>
+      </div>
+    </section>
+    <section class="output">
+      <div id="static" class="static hidden"></div>
+      <article id="report" class="report"><p class="empty">Results appear here.</p></article>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

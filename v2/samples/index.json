@@ -1,0 +1,37 @@
+[
+  {
+    "id": "magecart-skimmer",
+    "name": "Magecart card skimmer",
+    "description": "Checkout skimmer that captures card number, CVV, expiry, cardholder and password fields, then exfiltrates them to a base64-hidden domain on keyup, change, submit and a timed heartbeat.",
+    "expectedRisk": "critical",
+    "source": "https://cdn.example-shop.com/checkout/enhancements.min.js"
+  },
+  {
+    "id": "supportbubble-chat",
+    "name": "SupportBubble chat widget",
+    "description": "Third-party chat widget that loads a script named in the URL query string, runs eval() on unvalidated postMessage data, ships PII via sendBeacon with a hardcoded key, and fires an insecure http pixel.",
+    "expectedRisk": "high",
+    "source": "https://cdn.supportbubble.io/widget/v2/loader.js"
+  },
+  {
+    "id": "sketchy-analytics",
+    "name": "PulseMetrics tracker",
+    "description": "Aggressive tracker: canvas, WebGL and audio fingerprinting plus full navigator enumeration, cookie-based ID, and cookie-sync beacons to multiple third-party exchanges with no consent gate.",
+    "expectedRisk": "high",
+    "source": "https://tag.pulsemetrics.io/v3/pm.js"
+  },
+  {
+    "id": "benign-widget",
+    "name": "ShopKit currency formatter",
+    "description": "Clean currency-formatting widget. Fetches exchange rates from its own https API, writes prices with textContent, uses no cookies or sensitive data, and calls no third parties.",
+    "expectedRisk": "low",
+    "source": "https://cdn.shopkit.dev/widgets/currency.v1.js"
+  },
+  {
+    "id": "obfuscated-loader",
+    "name": "Obfuscated script loader",
+    "description": "Heavily obfuscated loader (_0x string array with rotation, packer-style indirection, dense hex escapes) that reassembles a hidden delivery URL and injects a remote script, with a debugger anti-analysis loop.",
+    "expectedRisk": "high",
+    "source": "https://static.adtech-delivery.net/b/bundle.min.js"
+  }
+]
