@@ -457,7 +457,9 @@ function serveStatic(req, res, pathname) {
 export default async function handler(req, res) {
   let url;
   try { url = new URL(req.url, 'http://localhost'); } catch { res.writeHead(400); return res.end('Bad request'); }
-  const { pathname } = url;
+  let { pathname } = url;
+  // vercel.json rewrites /api/* to /api?path=*; restore the original path if the runtime passes the rewritten URL.
+  if (pathname === '/api' && url.searchParams.has('path')) pathname = `/api/${url.searchParams.get('path')}`;
   try {
     if (req.method === 'POST' && pathname === '/api/analyze') return await handleAnalyze(req, res);
     if (req.method === 'POST' && pathname === '/api/fetch') return await handleFetch(req, res);
